@@ -6,7 +6,7 @@ Created this program to allow attempted filling of EIN (TaxID) for a list of Org
 ```
 AUTH_TOKEN = "<causeiq_api_token>"
 ```
-2. Create a CSV file ....
+2. Create a CSV file for domains with EINs will be added to if found for each domain.
 3. Create and activate a virtual environment:
 ```
 python3 -m venv .venv       # Mac/Linux
