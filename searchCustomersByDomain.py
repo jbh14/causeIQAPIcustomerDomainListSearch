@@ -6,24 +6,22 @@ from dotenv import load_dotenv
 from readCustomerDomainsFromSheet import read_customer_domains
 from extractDomains import extract_domain
 
-CUSTOMERS_CSV_FILE = "someOrgsToSearch.csv"
-CUSTOMER_ID_COL_HEADER = "search_domain"
+SEARCH_ORGS_CSV_FILE = "someOrgsToSearch.csv"
+SEARCH_DOMAIN_COL_HEADER = "search_domain"
+CAUSE_IQ_ORGSEARCH_ENDPOINT = "https://www.causeiq.com/api/organizations"
+OUTPUT_CSV_FILE = "results.csv"
 
-# Load environment variables from .env file
+# Load environment variables from .env file to get auth token
 load_dotenv()
-
-# get auth token from env variables
 if not os.getenv("AUTH_TOKEN"):
     raise ValueError("AUTH_TOKEN is not set in the environment variables")
-BASE_URL = "https://www.causeiq.com/api/organizations"
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 
-# TODO - load domains to search from a CSV file
-# Load customer IDs from CSV
-customer_domains = read_customer_domains(CUSTOMERS_CSV_FILE, CUSTOMER_ID_COL_HEADER) # 1st parameter is the CSV filename, 2nd parameter is the column header for customer IDs
+# Load domains to clean and search from CSV
+customer_domains = read_customer_domains(SEARCH_ORGS_CSV_FILE, SEARCH_DOMAIN_COL_HEADER) 
 
 def search_customer(search_domain):
-    url = f"{BASE_URL}"
+    url = f"{CAUSE_IQ_ORGSEARCH_ENDPOINT}"
     headers = {
         "Authorization": f"Token {AUTH_TOKEN}"
     }  
@@ -43,7 +41,7 @@ def search_customer(search_domain):
             print(ein)
 
             # append/write output to CSV file
-            with open("output.csv", mode="a", newline="") as file:
+            with open(OUTPUT_CSV_FILE, mode="a", newline="") as file:
                 writer = csv.DictWriter(file, fieldnames=["domain", "ein"])
                 
                 # Only write header if file is empty
@@ -58,8 +56,14 @@ def search_customer(search_domain):
     else:
         print(f"Error ({response.status_code}): {response.text}")
 
-for domain in customer_domains:
+# remove repeated domains
+def get_unique_items(input_list):
+    return list(set(input_list))
 
+customer_domains_unique = get_unique_items(customer_domains)
+
+# loop through each domain in the list, clean it, and search it
+for domain in customer_domains_unique:
     # Extract domain from the customer ID
     print(f"Extracting domain from: {domain}")
     domain = extract_domain(domain)
