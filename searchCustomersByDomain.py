@@ -42,10 +42,14 @@ def search_customer(search_domain):
             ein = data["results"][0]["ein"]
             print(ein)
 
-            # write output to CSV file
-            with open("results.csv", mode="w", newline="") as file:
+            # append/write output to CSV file
+            with open("output.csv", mode="a", newline="") as file:
                 writer = csv.DictWriter(file, fieldnames=["domain", "ein"])
-                writer.writeheader()
+                
+                # Only write header if file is empty
+                if file.tell() == 0:
+                    writer.writeheader()
+
                 writer.writerow({
                     "domain": search_domain,
                     "ein": ein
@@ -62,4 +66,4 @@ for domain in customer_domains:
     print(f"Extracted domain: {domain}")
     print("")
 
-    # search_customer(domain)
+    search_customer(domain)
