@@ -7,4 +7,5 @@ def read_customer_domains(csv_filename, id_file_header="id", search_domain_file_
         reader = csv.DictReader(file)  # Reads CSV into a dictionary format
         for row in reader:
             domain_from_customer_id[row[id_file_header]] = row[search_domain_file_header]
+            
     return domain_from_customer_id
