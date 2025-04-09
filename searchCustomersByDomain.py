@@ -65,20 +65,30 @@ def search_customer(customer_id):
             data = response.json()
             if not data["results"]:
                 print(f"No results found for {search_domain}")
-                search_result_from_clean_domain[search_domain] = None
+                search_result_from_clean_domain[search_domain] = "none"
                 # append/write output to CSV file
-                write_result_to_csv(customer_id, raw_domain, search_domain, None,
+                write_result_to_csv(customer_id, raw_domain, search_domain, "none",
                             OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
                 return
             else:
+                # only keep result if there is one
                 print(f"Results found for {search_domain}:")
-                ein = data["results"][0]["ein"]
-                search_result_from_clean_domain[search_domain] = ein
-                print(ein)
-
-                # append/write output to CSV file
-                write_result_to_csv(customer_id, raw_domain, search_domain, ein,
-                            OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
+                
+                number_of_matches = data["total"]
+                print(f"number of matches: {number_of_matches}")
+                if number_of_matches > 1:
+                    print("multiple matches found, not adding an EIN to results")
+                    search_result_from_clean_domain[search_domain] = "multiple"
+                    # append/write output to CSV file
+                    write_result_to_csv(customer_id, raw_domain, search_domain, "multiple",
+                                        OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)                    
+                else: 
+                    ein = data["results"][0]["ein"]
+                    search_result_from_clean_domain[search_domain] = ein
+                    print(ein)
+                    # append/write output to CSV file
+                    write_result_to_csv(customer_id, raw_domain, search_domain, ein,
+                                        OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
 
         else:
             print(f"Error ({response.status_code}): {response.text}")
