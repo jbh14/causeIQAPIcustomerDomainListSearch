@@ -1,5 +1,10 @@
 # causeIQAPIcustomerDomainListSearch
-Created this program to allow attempted filling of EIN (TaxID) for a list of Orgs that we think we might know a "domain" from.
+Created this program to allow attempted filling of EIN (TaxID) for a list of Organizations based on "domain".  The results are tabulated in a "results.csv" file produced, with an "id", the original domain, the "cleaned" domain, and the search result, which will be:
+1. "none" if no matches were found
+2. "multiple" if >1 match was found
+3. the EIN of the matched Org if exactly one was found
+
+The input/source data should be in a .CSV with an "id" column (to be able to tie results to inputs) and a "search_domain" column.
 
 ## Available Scripts
 1. Running this locally, make the CB site name and API key available to the script by listing inside an `.env` file in your project directory as such:
