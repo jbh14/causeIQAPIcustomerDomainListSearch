@@ -7,17 +7,26 @@ from readCustomerDomainsFromSheet import read_customer_domains
 from extractDomains import extract_domain
 from writeResultToCSV import write_result_to_csv
 
-SEARCH_ORGS_CSV_FILE = "allLeadsToSearch.csv"
+SEARCH_ORGS_CSV_FILE = "someLeadsToSearch.csv"
 SEARCH_ORGS_ID_COL_HEADER = "id"
 SEARCH_DOMAIN_COL_HEADER = "search_domain"
 CAUSE_IQ_ORGSEARCH_ENDPOINT = "https://www.causeiq.com/api/organizations"
 OUTPUT_CSV_FILE = "results.csv"
+# List of generic email domains - feel free to add here if more discovered.  We won't even attempt a causeIQ search for these domains
+GENERIC_DOMAINS = {
+    "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "outlook.com",
+    "icloud.com", "msn.com", "live.com", "comcast.net", "me.com",
+    "mac.com", "att.net", "verizon.net", "mail.com", "yandex.com",
+    "protonmail.com", "zoho.com", "gmx.com", "ymail.com", "cox.net",
+    "rocketmail.com", "inbox.com"
+}
 
 # Load environment variables from .env file to get auth token
 load_dotenv()
 if not os.getenv("AUTH_TOKEN"):
     raise ValueError("AUTH_TOKEN is not set in the environment variables")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
+
 
 # get map from customer id to "unclean" domain
 raw_domain_from_customer_id = read_customer_domains(SEARCH_ORGS_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER) 
@@ -48,6 +57,12 @@ def search_customer(customer_id):
         print(f"Already searched {search_domain}, result is {search_result_from_clean_domain[search_domain]}")
         # append/write output to CSV file
         write_result_to_csv(customer_id, raw_domain, search_domain, search_result_from_clean_domain[search_domain],
+                            OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
+        return
+    elif search_domain in GENERIC_DOMAINS:
+        print(f"Domain {search_domain} is a generic domain, skipping search")
+        # append/write output to CSV file
+        write_result_to_csv(customer_id, raw_domain, search_domain, "generic",
                             OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
         return
     else:
