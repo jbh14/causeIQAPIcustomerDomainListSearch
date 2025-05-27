@@ -1,17 +1,15 @@
 import os
 import requests
-import base64
-import csv
 from dotenv import load_dotenv
 from readCustomerDomainsFromSheet import read_customer_domains
 from extractDomains import extract_domain
 from writeResultToCSV import write_result_to_csv
 
-SEARCH_ORGS_CSV_FILE = "someLeadsToSearch.csv"
+SEARCH_ORGS_CSV_FILE = "matchedLeadsRequery.csv"
 SEARCH_ORGS_ID_COL_HEADER = "id"
 SEARCH_DOMAIN_COL_HEADER = "search_domain"
 CAUSE_IQ_ORGSEARCH_ENDPOINT = "https://www.causeiq.com/api/organizations"
-OUTPUT_CSV_FILE = "results.csv"
+OUTPUT_CSV_FILE = "leadRequeryMay27.csv"
 # List of generic email domains - feel free to add here if more discovered.  We won't even attempt a causeIQ search for these domains
 GENERIC_DOMAINS = {
     "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "outlook.com",
@@ -52,17 +50,21 @@ def search_customer(customer_id):
     # get clean domain from the customer id
     search_domain = clean_domain_from_raw_domain[raw_domain]
     
-    # adjustment to make - if we already searched this domain, use result we got before, and add to sheet
+    # if we already searched this domain, use result we got before, and add to sheet
     if search_domain in search_result_from_clean_domain:
-        print(f"Already searched {search_domain}, result is {search_result_from_clean_domain[search_domain]}")
+        print(f"Already searched {search_domain}, result is {search_result_from_clean_domain[search_domain]["value"]}")
         # append/write output to CSV file
-        write_result_to_csv(customer_id, raw_domain, search_domain, search_result_from_clean_domain[search_domain],
+        write_result_to_csv(customer_id, raw_domain, search_domain, 
+                            search_result_from_clean_domain[search_domain]["value"],
+                            search_result_from_clean_domain[search_domain]["org_name"],
+                            search_result_from_clean_domain[search_domain]["address"],
                             OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
         return
     elif search_domain in GENERIC_DOMAINS:
         print(f"Domain {search_domain} is a generic domain, skipping search")
         # append/write output to CSV file
-        write_result_to_csv(customer_id, raw_domain, search_domain, "generic",
+        write_result_to_csv(customer_id, raw_domain, search_domain, 
+                            "generic","","",
                             OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
         return
     else:
@@ -80,10 +82,15 @@ def search_customer(customer_id):
             data = response.json()
             if not data["results"]:
                 print(f"No results found for {search_domain}")
-                search_result_from_clean_domain[search_domain] = "none"
+                search_result_from_clean_domain[search_domain] = {
+                    "value": "none",
+                    "org_name": "",
+                    "address": ""
+                }
                 # append/write output to CSV file
-                write_result_to_csv(customer_id, raw_domain, search_domain, "none",
-                            OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
+                write_result_to_csv(customer_id, raw_domain, search_domain, 
+                                    "none","","",
+                                    OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
                 return
             else:
                 # only keep result if there is one
@@ -93,16 +100,28 @@ def search_customer(customer_id):
                 print(f"number of matches: {number_of_matches}")
                 if number_of_matches > 1:
                     print("multiple matches found, not adding an EIN to results")
-                    search_result_from_clean_domain[search_domain] = "multiple"
+                    search_result_from_clean_domain[search_domain] = {
+                        "value": "multiple",
+                        "org_name": "",
+                        "address": ""
+                    }
                     # append/write output to CSV file
-                    write_result_to_csv(customer_id, raw_domain, search_domain, "multiple",
+                    write_result_to_csv(customer_id, raw_domain, search_domain, 
+                                        "multiple","","",
                                         OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)                    
                 else: 
                     ein = data["results"][0]["ein"]
-                    search_result_from_clean_domain[search_domain] = ein
+                    org_name = data["results"][0]["name"]
+                    address = data["results"][0]["address"]
+                    search_result_from_clean_domain[search_domain] = {
+                        "value": ein,
+                        "org_name": org_name,
+                        "address": address
+                    }
                     print(ein)
                     # append/write output to CSV file
-                    write_result_to_csv(customer_id, raw_domain, search_domain, ein,
+                    write_result_to_csv(customer_id, raw_domain, search_domain, 
+                                        ein, org_name, address, 
                                         OUTPUT_CSV_FILE, SEARCH_ORGS_ID_COL_HEADER, SEARCH_DOMAIN_COL_HEADER)
 
         else:
