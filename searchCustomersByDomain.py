@@ -5,11 +5,11 @@ from readCustomerDomainsFromSheet import read_customer_domains
 from extractDomains import extract_domain
 from writeResultToCSV import write_result_to_csv
 
-SEARCH_ORGS_CSV_FILE = "matchedLeadsRequery.csv"
+SEARCH_ORGS_CSV_FILE = "orgsToSearchB_May27.csv"
 SEARCH_ORGS_ID_COL_HEADER = "id"
 SEARCH_DOMAIN_COL_HEADER = "search_domain"
 CAUSE_IQ_ORGSEARCH_ENDPOINT = "https://www.causeiq.com/api/organizations"
-OUTPUT_CSV_FILE = "leadRequeryMay27.csv"
+OUTPUT_CSV_FILE = "orgResultsB_May27.csv"
 # List of generic email domains - feel free to add here if more discovered.  We won't even attempt a causeIQ search for these domains
 GENERIC_DOMAINS = {
     "gmail.com", "yahoo.com", "hotmail.com", "aol.com", "outlook.com",
